@@ -7,13 +7,14 @@ from PIL import Image
 from io import BytesIO
 import tensorflow as tf
 
-origins = [
-    "http://localhost",
-    "http://localhost:3000",
-]
+# origins = [
+#     "http://localhost",
+#     "http://localhost:3000",
+#     "https://remaining-nedda-bakhtiyorjon-3f910bd5.koyeb.app"
+# ]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

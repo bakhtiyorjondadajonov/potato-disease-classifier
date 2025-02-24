@@ -46,6 +46,9 @@ async def predict(
         "class":predicted_class,
         "confidence":confidence
     }
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}    
 # Run the server
 if __name__ == "__main__":
     uvicorn.run(app,host='localhost',port=8000)

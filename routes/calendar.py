@@ -21,7 +21,7 @@ async def get_crop_calendar(request: FastAPIRequest, body: CropCalendarRequest):
     season = body.season or "current"
     location = body.location or "general"
 
-    plant = body.plant_type or "potato"
+    plant = body.plant_type.value if body.plant_type else "potato"
     prompt = f"""You are an expert agricultural planner for {plant} crops.
 
 Disease detected: {body.disease} (confidence: {body.confidence * 100:.1f}%)
@@ -59,7 +59,7 @@ Return ONLY a JSON array with 4-6 items, no other text. Example format:
             ActionItem(
                 week="Week 1",
                 action="Assessment",
-                details=f"Assess the extent of {body.disease} in your potato crop.",
+                details=f"Assess the extent of {body.disease} in your {plant} crop.",
             ),
             ActionItem(
                 week="Week 2",

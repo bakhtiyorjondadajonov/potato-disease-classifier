@@ -12,6 +12,15 @@ class PlantType(str, Enum):
     strawberry = "strawberry"
 
 
+class AllPlantType(str, Enum):
+    potato = "potato"
+    tomato = "tomato"
+    corn = "corn"
+    pepper = "pepper"
+    apple = "apple"
+    strawberry = "strawberry"
+
+
 class PredictionResponse(BaseModel):
     class_name: str = Field(..., alias="class")
     confidence: float
@@ -23,7 +32,7 @@ class PredictionResponse(BaseModel):
 class AdviceRequest(BaseModel):
     disease: str
     confidence: float = Field(..., ge=0, le=1)
-    plant_type: Optional[str] = None
+    plant_type: Optional[AllPlantType] = None
 
 
 class AdviceResponse(BaseModel):
@@ -44,7 +53,7 @@ class CropCalendarRequest(BaseModel):
     confidence: float = Field(..., ge=0, le=1)
     season: Optional[str] = None
     location: Optional[str] = None
-    plant_type: Optional[str] = None
+    plant_type: Optional[AllPlantType] = None
 
 
 class CropCalendarResponse(BaseModel):
@@ -64,6 +73,7 @@ class SeverityResponse(BaseModel):
 class HealthResponse(BaseModel):
     status: str
     model_loaded: bool
+    gemini_available: bool
 
 
 class AnalyzeResponse(BaseModel):

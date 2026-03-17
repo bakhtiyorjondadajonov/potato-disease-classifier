@@ -17,7 +17,7 @@ limiter = Limiter(key_func=get_remote_address)
 @router.post("/advice", response_model=AdviceResponse)
 @limiter.limit(settings.rate_limit_gemini)
 async def get_advice(request: FastAPIRequest, body: AdviceRequest):
-    plant = body.plant_type or "potato"
+    plant = body.plant_type.value if body.plant_type else "potato"
     prompt = f"""You are an expert agricultural advisor specializing in {plant} diseases.
 
 The disease detected is: {body.disease} (confidence: {body.confidence * 100:.1f}%)

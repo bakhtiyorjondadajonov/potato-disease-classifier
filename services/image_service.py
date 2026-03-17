@@ -29,7 +29,9 @@ async def validate_and_read_image(
         )
 
     try:
-        image = np.array(Image.open(BytesIO(data)))
+        img = Image.open(BytesIO(data)).convert("RGB")
+        img = img.resize((256, 256))
+        image = np.array(img)
     except Exception:
         logger.exception("Failed to read image")
         raise HTTPException(status_code=400, detail="Could not read image file. It may be corrupt.")

@@ -1,7 +1,7 @@
 import logging
 
 import numpy as np
-from fastapi import APIRouter, File, Request, UploadFile
+from fastapi import APIRouter, File, HTTPException, Request, UploadFile
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
@@ -28,7 +28,6 @@ async def predict(request: Request, file: UploadFile = File(...)):
         predictions = model.predict(image_batch)
     except Exception:
         logger.exception("Prediction failed")
-        from fastapi import HTTPException
         raise HTTPException(status_code=500, detail="Prediction failed")
 
     result_ind = int(np.argmax(predictions[0]))

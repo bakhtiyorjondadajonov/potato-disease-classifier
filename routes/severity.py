@@ -53,7 +53,7 @@ Return ONLY the JSON object, no other text."""
             text = text[start:end]
         data = json.loads(text)
         return SeverityResponse(**data)
-    except (json.JSONDecodeError, ValueError, TypeError):
+    except (json.JSONDecodeError, KeyError, ValueError, TypeError):
         logger.warning("Failed to parse Gemini severity response, using fallback")
         return SeverityResponse(
             severity_level="unknown",

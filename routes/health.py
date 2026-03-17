@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
-from model_loader import _model
+import model_loader
+import services.gemini_service as gemini_mod
 from schemas import HealthResponse
 
 router = APIRouter()
@@ -13,4 +14,8 @@ async def ping():
 
 @router.get("/health", response_model=HealthResponse)
 async def health_check():
-    return HealthResponse(status="ok", model_loaded=_model is not None)
+    return HealthResponse(
+        status="ok",
+        model_loaded=model_loader._model is not None,
+        gemini_available=gemini_mod._client is not None,
+    )

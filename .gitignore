@@ -6,6 +6,11 @@ __pycache__/
 *.pyc
 *.pyo
 
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+
 # IDE
 .vscode/
 .idea/

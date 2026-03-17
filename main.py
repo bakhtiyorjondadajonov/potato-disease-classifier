@@ -11,7 +11,7 @@ from slowapi.util import get_remote_address
 from config import settings
 from model_loader import load_model
 from services.gemini_service import init_gemini
-from routes import health, predict, advice, calendar, severity, analyze
+from routes import health, predict, advice, calendar, severity, analyze, recommendations
 
 # Logging
 logging.basicConfig(
@@ -60,6 +60,7 @@ app.include_router(advice.router)
 app.include_router(calendar.router)
 app.include_router(severity.router)
 app.include_router(analyze.router)
+app.include_router(recommendations.router)
 
 
 @app.exception_handler(Exception)

@@ -82,6 +82,21 @@ class AnalyzeResponse(BaseModel):
     is_healthy: bool
     confidence: float = Field(..., ge=0, le=1)
     description: str
+    warning: Optional[str] = None
+
+
+class RecommendationsRequest(BaseModel):
+    disease: str
+    confidence: float = Field(..., ge=0, le=1)
+    plant_type: Optional[AllPlantType] = None
+    season: Optional[str] = None
+    location: Optional[str] = None
+
+
+class RecommendationsResponse(BaseModel):
+    severity: SeverityResponse
+    advice: AdviceResponse
+    calendar: CropCalendarResponse
 
 
 class ErrorResponse(BaseModel):

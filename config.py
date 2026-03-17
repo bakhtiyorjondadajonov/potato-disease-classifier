@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     ]
     debug: bool = False
 
-    model_config = {"env_prefix": "POTATO_", "protected_namespaces": ("settings_",)}
+    model_config = {"env_prefix": "POTATO_", "env_file": ".env", "protected_namespaces": ("settings_",)}
 
 
 settings = Settings()

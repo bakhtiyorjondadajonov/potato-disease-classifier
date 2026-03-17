@@ -34,6 +34,17 @@ async def predict(request: Request, file: UploadFile = File(...)):
     predicted_class = CLASS_NAMES[result_ind]
     confidence = float(np.max(predictions[0]))
 
+    CONFIDENCE_THRESHOLD = 0.5
+    if confidence < CONFIDENCE_THRESHOLD:
+        logger.info("Low confidence %.2f%% - image likely not a potato leaf", confidence * 100)
+        return PredictionResponse(
+            **{
+                "class": "Not Identified",
+                "confidence": confidence,
+                "confidence_percent": f"{confidence * 100:.1f}%",
+            }
+        )
+
     logger.info("Prediction: %s (%.2f%%)", predicted_class, confidence * 100)
 
     return PredictionResponse(

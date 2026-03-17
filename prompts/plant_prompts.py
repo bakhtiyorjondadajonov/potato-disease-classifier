@@ -8,8 +8,33 @@ Return ONLY a JSON object with exactly these keys:
 - "is_healthy": boolean — true only if the plant appears healthy
 - "confidence": float between 0.0 and 1.0
 - "description": string — 2-3 sentence description of what you observe
+- "warning": string or null — set to "invalid_plant_image" ONLY if the image does not show the expected plant
 
 Return ONLY the JSON object, no other text or markdown."""
+
+_REJECTION_TEMPLATE = """
+⚠️ IMPORTANT: If the image does NOT show a {plant} plant, you MUST return:
+{{"disease_name": "Not Identified", "is_healthy": false, "confidence": 0.0, "description": "This image does not appear to be a {plant} plant. Please upload a clear image of a {plant} leaf for accurate diagnosis.", "warning": "invalid_plant_image"}}
+"""
+
+POTATO_PROMPT = """You are an expert plant pathologist specializing in potato diseases.
+
+## Known Potato Diseases and Visual Symptoms
+
+| Disease | Key Visual Identifier |
+|---------|----------------------|
+| Early Blight | Dark brown concentric ring lesions (target spots) on older/lower leaves, yellow halo around lesions |
+| Late Blight | Water-soaked dark green to purple-brown irregular lesions on leaves, white fuzzy sporangia growth on leaf underside in humid conditions |
+
+## Healthy Potato Reference
+Uniformly green compound leaves with smooth oval leaflets. No spots, lesions, or discoloration. Sturdy upright stems.
+
+## Your Task
+1. Verify this image shows a potato plant (leaf or stem)
+2. If NOT a potato plant → return the warning JSON below
+3. If it IS a potato plant → diagnose using ONLY the known diseases above
+4. If healthy → disease_name: "Healthy", is_healthy: true
+""" + _REJECTION_TEMPLATE.format(plant="potato") + _JSON_FORMAT
 
 TOMATO_PROMPT = """You are an expert plant pathologist specializing in tomato diseases.
 
@@ -32,10 +57,10 @@ Uniform medium-green color, softly fuzzed (trichomes), no spots, lesions, or dis
 
 ## Your Task
 1. Verify this image shows a tomato plant (leaf, fruit, or stem)
-2. If NOT a tomato plant → disease_name: "Not Identified", confidence: 0.0, is_healthy: false
+2. If NOT a tomato plant → return the warning JSON below
 3. If it IS a tomato plant → diagnose using ONLY the known diseases above
 4. If healthy → disease_name: "Healthy", is_healthy: true
-""" + _JSON_FORMAT
+""" + _REJECTION_TEMPLATE.format(plant="tomato") + _JSON_FORMAT
 
 CORN_PROMPT = """You are an expert plant pathologist specializing in corn (maize) diseases.
 
@@ -57,10 +82,10 @@ Uniformly green, long narrow leaves with smooth margins, parallel venation, no s
 
 ## Your Task
 1. Verify this image shows a corn (maize) plant
-2. If NOT a corn plant → disease_name: "Not Identified", confidence: 0.0, is_healthy: false
+2. If NOT a corn plant → return the warning JSON below
 3. If it IS a corn plant → diagnose using ONLY the known diseases above
 4. If healthy → disease_name: "Healthy", is_healthy: true
-""" + _JSON_FORMAT
+""" + _REJECTION_TEMPLATE.format(plant="corn") + _JSON_FORMAT
 
 PEPPER_PROMPT = """You are an expert plant pathologist specializing in pepper (Capsicum) diseases.
 
@@ -81,10 +106,10 @@ Bright-to-dark green, smooth ovate leaves with a slight waxy finish. No spots, w
 
 ## Your Task
 1. Verify this image shows a pepper plant (leaf, fruit, or stem)
-2. If NOT a pepper plant → disease_name: "Not Identified", confidence: 0.0, is_healthy: false
+2. If NOT a pepper plant → return the warning JSON below
 3. If it IS a pepper plant → diagnose using ONLY the known diseases above
 4. If healthy → disease_name: "Healthy", is_healthy: true
-""" + _JSON_FORMAT
+""" + _REJECTION_TEMPLATE.format(plant="pepper") + _JSON_FORMAT
 
 APPLE_PROMPT = """You are an expert plant pathologist specializing in apple tree diseases.
 
@@ -105,10 +130,10 @@ Dark-to-olive green elliptical leaves with finely toothed (serrate) margins. Smo
 
 ## Your Task
 1. Verify this image shows an apple tree (leaf, fruit, or branch)
-2. If NOT an apple tree → disease_name: "Not Identified", confidence: 0.0, is_healthy: false
+2. If NOT an apple tree → return the warning JSON below
 3. If it IS an apple tree → diagnose using ONLY the known diseases above
 4. If healthy → disease_name: "Healthy", is_healthy: true
-""" + _JSON_FORMAT
+""" + _REJECTION_TEMPLATE.format(plant="apple") + _JSON_FORMAT
 
 STRAWBERRY_PROMPT = """You are an expert plant pathologist specializing in strawberry diseases.
 
@@ -129,12 +154,13 @@ Deep uniform dark green, glossy trifoliate leaves (three-leaflet clover pattern)
 
 ## Your Task
 1. Verify this image shows a strawberry plant (leaf, fruit, or crown)
-2. If NOT a strawberry plant → disease_name: "Not Identified", confidence: 0.0, is_healthy: false
+2. If NOT a strawberry plant → return the warning JSON below
 3. If it IS a strawberry plant → diagnose using ONLY the known diseases above
 4. If healthy → disease_name: "Healthy", is_healthy: true
-""" + _JSON_FORMAT
+""" + _REJECTION_TEMPLATE.format(plant="strawberry") + _JSON_FORMAT
 
 _PROMPTS = {
+    "potato": POTATO_PROMPT,
     "tomato": TOMATO_PROMPT,
     "corn": CORN_PROMPT,
     "pepper": PEPPER_PROMPT,

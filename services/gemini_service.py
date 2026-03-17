@@ -1,11 +1,16 @@
 import logging
+import time
 
 from google import genai
 from google.genai import types
+from google.genai.errors import ClientError
 
 logger = logging.getLogger(__name__)
 
 _client = None
+
+RETRY_DELAY = 2
+MAX_RETRIES = 1
 
 
 def init_gemini(api_key: str):
@@ -28,17 +33,37 @@ def get_client() -> genai.Client:
     return _client
 
 
+def _retry_on_rate_limit(func, *args, **kwargs):
+    for attempt in range(MAX_RETRIES + 1):
+        try:
+            return func(*args, **kwargs)
+        except ClientError as e:
+            if e.status_code == 429 and attempt < MAX_RETRIES:
+                logger.warning("Rate limited by Gemini API, retrying in %ds...", RETRY_DELAY)
+                time.sleep(RETRY_DELAY)
+            else:
+                raise
+
+
 def generate_text(prompt: str, model: str) -> str:
     client = get_client()
-    response = client.models.generate_content(model=model, contents=prompt)
-    return response.text
+
+    def _call():
+        response = client.models.generate_content(model=model, contents=prompt)
+        return response.text
+
+    return _retry_on_rate_limit(_call)
 
 
 def analyze_image(image_bytes: bytes, mime_type: str, prompt: str, model: str) -> str:
     client = get_client()
     image_part = types.Part.from_bytes(data=image_bytes, mime_type=mime_type)
-    response = client.models.generate_content(
-        model=model,
-        contents=[prompt, image_part],
-    )
-    return response.text
+
+    def _call():
+        response = client.models.generate_content(
+            model=model,
+            contents=[prompt, image_part],
+        )
+        return response.text
+
+    return _retry_on_rate_limit(_call)

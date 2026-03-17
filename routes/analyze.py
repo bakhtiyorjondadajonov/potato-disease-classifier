@@ -55,6 +55,7 @@ async def analyze_plant(
             is_healthy=data["is_healthy"],
             confidence=data["confidence"],
             description=data["description"],
+            warning=data.get("warning"),
         )
     except (json.JSONDecodeError, KeyError, ValueError, TypeError):
         logger.warning("Failed to parse Gemini analysis response for %s, using fallback", plant_type.value)

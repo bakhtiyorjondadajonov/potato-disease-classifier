@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.env
+.git/
+.pytest_cache/
+htmlcov/
+*.log
+tests/
+.coverage
+.vscode/
+.idea/
+potato_disease_classifier.ipynb

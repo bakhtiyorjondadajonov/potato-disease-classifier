@@ -3,5 +3,8 @@ fastapi
 uvicorn
 python-multipart
 pillow
-matplotlib
 numpy
+pydantic-settings
+slowapi
+google-genai
+python-dotenv

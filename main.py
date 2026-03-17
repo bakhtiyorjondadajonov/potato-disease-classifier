@@ -1,54 +1,76 @@
-from fastapi import FastAPI,File,UploadFile
-from fastapi.middleware.cors import CORSMiddleware
-import uvicorn
-app=FastAPI()
-import numpy as np
-from PIL import Image
-from io import BytesIO
-import tensorflow as tf
+import logging
+from contextlib import asynccontextmanager
 
-# origins = [
-#     "http://localhost",
-#     "http://localhost:3000",
-#     "https://remaining-nedda-bakhtiyorjon-3f910bd5.koyeb.app"
-# ]
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
+
+from config import settings
+from model_loader import load_model
+from services.gemini_service import init_gemini
+from routes import health, predict, advice, calendar, severity, analyze
+
+# Logging
+logging.basicConfig(
+    level=logging.DEBUG if settings.debug else logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+)
+logger = logging.getLogger(__name__)
+
+# Rate limiter
+limiter = Limiter(key_func=get_remote_address)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info("Starting up - loading model and initializing services")
+    load_model(settings.model_path)
+    init_gemini(settings.gemini_api_key)
+    yield
+    logger.info("Shutting down")
+
+
+app = FastAPI(
+    title="Plant Disease Classifier API",
+    version="3.0.0",
+    description="CNN-based potato disease classification plus Gemini-powered multi-plant disease analysis (tomato, corn, pepper, apple, strawberry) with treatment advice, crop calendars, and severity analysis.",
+    lifespan=lifespan,
+)
+
+# Rate limiting
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# Routers
+app.include_router(health.router)
+app.include_router(predict.router)
+app.include_router(advice.router)
+app.include_router(calendar.router)
+app.include_router(severity.router)
+app.include_router(analyze.router)
 
-@app.get("/ping")
-async def ping():
-    return "Hello, I am alive"
 
-MODEL=tf.keras.models.load_model("./cnn_model.keras")
-CLASS_NAMES=['Ealy Blight',"Late Blight","Healthy"]
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.exception("Unhandled error: %s", exc)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error", "error_code": "INTERNAL_ERROR"},
+    )
 
-def read_file_as_image(data)-> np.ndarray:
-    image=np.array(Image.open(BytesIO(data)))
-    return image
-@app.post("/predict")  
-async def predict(
-    file: UploadFile=File(...)
-):
-    image= read_file_as_image(await file.read())
-    image_batch=np.expand_dims(image,0)
-    predictions = MODEL.predict(image_batch)
-    result_ind=int(np.argmax(predictions[0]))
-    predicted_class=str(CLASS_NAMES[result_ind])
-    confidence=float(np.max(predictions[0]))
 
-    return {
-        "class":predicted_class,
-        "confidence":confidence
-    }
-@app.get("/health")
-def health_check():
-    return {"status": "ok"}    
-# Run the server
 if __name__ == "__main__":
-    uvicorn.run(app,host='localhost',port=8000)
+    import uvicorn
+    uvicorn.run(app, host="localhost", port=8000)
